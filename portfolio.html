@@ -7,6 +7,7 @@
 		<link href="css/normalize.css" rel="stylesheet" >
 		<link href="https://fonts.googleapis.com/css?family=Cabin+Sketch" rel="stylesheet"> 
 		<link href="css/main.css" rel="stylesheet">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 	</head>
 
 	<body>
@@ -17,24 +18,18 @@
 			</a>
 			<nav>
 				<ul>
-					<li><a href="index.html" class="selected">Home</a></li>
-					<li><a href="portfolio.html">Portfolio</a></li>
+					<li><a href="index.html">Home</a></li>
+					<li><a href="portfolio.html" class="selected">Portfolio</a></li>
 					<li><a href="about.html">About</a></li>
 				</ul>
 			</nav>
 		</header>
 		<div id="wrapper">
-			<p>Welcome, current 61A students! This is my website, where you'll find various resources specific to my section.</p>
-			<h3>Resources for my discussion!</h3>
+			<p>Portfolio for ART 178, game design course.</p>
+			<h3>Pong Breaker</h3>
 			<section>
-				<b>SLIDES</b>
-				<ul>
-					<li><a href="https://docs.google.com/presentation/d/1I6V3BXoMJabog-OHmh5svCIcipH-kzL7i3IRM7N6Ps0/edit?usp=sharing">Intro to CS 61A</a></li>
-				</ul>
-				<b>PRACTICE PROBLEMS</b> 
-				<ul> 
-					<li>REMOVED UNTIL LATER IN THE SEMESTER</li>
-				</ul>
+				<canvas id="PongBreaker" width="660" height="440"></canvas>
+				<script type="text/javascript" src="pong.js"></script>
 			</section>
 			<footer>
 				<p>&copy; 2017 Michael Gibbes.</p>

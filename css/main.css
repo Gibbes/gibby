@@ -11,6 +11,12 @@ body {
 	font-family: 'Lucida Sans Typewriter', sans-serif;
 }
 
+canvas {
+	background: #eee;
+	display: block;
+	margin: 0 auto;
+}
+
 ul {
 	list-style: none;
 	text-decoration: none;
