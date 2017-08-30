@@ -124,6 +124,24 @@ function drawBricks() {
 		}
 	}
 }
+function drawKeyHints() {
+	"use strict";
+	
+	ctx.font = "16px Arial";
+	ctx.fillStyle = "#ff7630";
+	if (!wPressed) {
+		ctx.fillText("w", 0, paddle1Y - 20);
+	}
+	if (!sPressed) {
+		ctx.fillText("s", 0, paddle1Y + paddleHeight + 26);
+	}
+	if (!iPressed) {
+		ctx.fillText("i", canvas.width - 8, paddle2Y - 20);
+	}
+	if (!kPressed) {
+		ctx.fillText("k", canvas.width - 8, paddle2Y + paddleHeight + 30);
+	}
+}
 function detectBrickCollision() {
 	"use strict";
 	
@@ -202,6 +220,7 @@ function draw() {
 	drawBalls();
 	drawPaddle(0, paddle1Y);
 	drawPaddle(canvas.width - paddleWidth, paddle2Y);
+	drawKeyHints();
 	
 	detectBallCollision();
 	
