@@ -70,10 +70,12 @@ var ball1X = canvas.width * (1 / 4);
 var ball1Y = canvas.height / 2;
 var ball2X = canvas.width * (3 / 4);
 var ball2Y = canvas.height / 2;
-var dx1 = 1; 
-var dy1 = Math.random() * 2 - 1;
-var dx2 = -1;
-var dy2 = Math.random() * 2 - 1;
+var ball1Fill = "ff7630";
+var ball2Fill = "ff7630";
+var dx1 = -1; 
+var dy1 = 0;
+var dx2 = 1;
+var dy2 = 0;
 var ballRadius = 10;
 var paddleWidth = 10;
 var paddleHeight = 75;
@@ -101,13 +103,13 @@ function drawBalls() {
 	
 	ctx.beginPath();
 	ctx.arc(ball1X, ball1Y, ballRadius, 0, Math.PI*2);
-	ctx.fillStyle = "#ff7630";
+	ctx.fillStyle = ball1Fill;
 	ctx.fill();
 	ctx.closePath();
 	
 	ctx.beginPath();
 	ctx.arc(ball2X, ball2Y, ballRadius, 0, Math.PI*2);
-	ctx.fillStyle = "#ff7630";
+	ctx.fillStyle = ball2Fill;
 	ctx.fill();
 	ctx.closePath();
 }
@@ -159,9 +161,11 @@ function drawText() {
 	ctx.fillText(brickCount, 8, 20);
 	ctx.fillText(brickCount, canvas.width - 25, 20);
 	if (!dPressed) {
+		ctx.fillStyle = "#ff7575";
 		ctx.fillText("D", 20, paddle1Y + paddleHeight / 2 + 5);
 	}
 	if (!jPressed) {
+		ctx.fillStyle = "#7282ff";
 		ctx.fillText("J", canvas.width - 28, paddle2Y + paddleHeight / 2 + 5);
 	}
 }
@@ -200,6 +204,7 @@ function detectBallCollision() {
 			dy1 = (-(paddle1Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
 			if (dPressed) {
 				dx1 *= 1.5;
+				ball1Fill = "#f44242";
 			}
 		}
 		else {
@@ -207,12 +212,13 @@ function detectBallCollision() {
 			document.location.reload();
 		}
 	}
-	if (ball2X + dx2 < ballRadius) {
+	else if (ball2X + dx2 < ballRadius) {
 		if (ball2Y > paddle1Y - 10 && ball2Y < paddle1Y + paddleHeight + 10) {
 			dx2 = -dx2;
 			dy2 = (-(paddle1Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
 			if (dPressed) {
 				dx2 *= 1.5;
+				ball2Fill = "#f44242";
 			}
 		}
 		else {
@@ -227,6 +233,7 @@ function detectBallCollision() {
 			dy1 = (-(paddle2Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
 			if (jPressed) {
 				dx1 *= 1.5;
+				ball1Fill = "#4256f4";
 			}
 		}
 		else {
@@ -234,12 +241,13 @@ function detectBallCollision() {
 			document.location.reload();
 		}
 	}
-	if (ball2X + dx2 > canvas.width - ballRadius) {
+	else if (ball2X + dx2 > canvas.width - ballRadius) {
 		if (ball2Y > paddle2Y - 10 && ball2Y < paddle2Y + paddleHeight + 10) {
 			dx2 = -dx2;
 			dy2 = (-(paddle2Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
 			if (jPressed) {
 				dx2 *= 1.5;
+				ball2Fill = "#4256f4";
 			}
 		}
 		else {
