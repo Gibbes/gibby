@@ -224,4 +224,15 @@ function draw() {
 	}
 }
 
-setInterval(draw, 10);
+draw();
+
+function waitForSpace() {
+	"use strict";
+	
+	if (spacePressed) {
+		clearInterval(waitForSpace);
+		setInterval(draw, 10);
+	}
+}
+	
+setInterval(waitForSpace, 100);
