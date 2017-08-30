@@ -9,6 +9,8 @@ var wPressed = false;
 var sPressed = false;
 var iPressed = false;
 var kPressed = false;
+var dPressed = false;
+var jPressed = false;
 var spacePressed = false;
 function keyPressHandler(e) {
 	"use strict";
@@ -28,6 +30,12 @@ function keyPressHandler(e) {
 	else if (e.keyCode === 32) {
 		spacePressed = true;
 	}
+	else if (e.keyCode === 68) {
+		dPressed = true;
+	}
+	else if (e.keyCode === 74) {
+		jPressed = true;
+	}
 }
 function keyReleaseHandler(e) {
 	"use strict";
@@ -46,6 +54,12 @@ function keyReleaseHandler(e) {
 	}
 	else if (e.keyCode === 32) {
 		spacePressed = false;
+	}
+	else if (e.keyCode === 68) {
+		dPressed = false;
+	}
+	else if (e.keyCode === 74) {
+		jPressed = false;
 	}
 }
 document.addEventListener("keydown", keyPressHandler, false);
@@ -79,6 +93,7 @@ for (var c = 0; c < brickColumnCount; c++) {
 		bricks[c][r] = [0, 0, 1];
 	}
 }
+var brickCount = 25;
 
 /** DRAW FUNCTIONS */
 function drawBalls() {
@@ -124,11 +139,11 @@ function drawBricks() {
 		}
 	}
 }
-function drawKeyHints() {
+function drawText() {
 	"use strict";
 	
 	ctx.font = "16px Arial";
-	ctx.fillStyle = "#ff7630";
+	ctx.fillStyle = "#ff9966";
 	if (!wPressed) {
 		ctx.fillText("w", 0, paddle1Y - 20);
 	}
@@ -141,6 +156,14 @@ function drawKeyHints() {
 	if (!kPressed) {
 		ctx.fillText("k", canvas.width - 8, paddle2Y + paddleHeight + 30);
 	}
+	ctx.fillText(brickCount, 8, 20);
+	ctx.fillText(brickCount, canvas.width - 25, 20);
+	if (!dPressed) {
+		ctx.fillText("D", 20, paddle1Y + paddleHeight / 2 + 5);
+	}
+	if (!jPressed) {
+		ctx.fillText("J", canvas.width - 28, paddle2Y + paddleHeight / 2 + 5);
+	}
 }
 function detectBrickCollision() {
 	"use strict";
@@ -151,14 +174,16 @@ function detectBrickCollision() {
 			if (ball1X > b[0] && ball1X < b[0] + brickWidth && ball1Y > b[1] && ball1Y < b[1] + brickHeight && b[2]) {
 				dx1 = -dx1;
 				b[2] = 0;
+				brickCount--;
 			}
 			if (ball2X > b[0] && ball2X < b[0] + brickWidth && ball2Y > b[1] && ball2Y < b[1] + brickHeight && b[2]) {
 				dx2 = -dx2;
 				b[2] = 0;
+				brickCount--;
 			}
 		}
 	}
-}
+} 
 function detectBallCollision() {
 	"use strict";
 	
@@ -173,9 +198,12 @@ function detectBallCollision() {
 		if (ball1Y > paddle1Y - 10 && ball1Y < paddle1Y + paddleHeight + 10) {
 			dx1 = -dx1;
 			dy1 = (-(paddle1Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
+			if (dPressed) {
+				dx1 *= 1.5;
+			}
 		}
 		else {
-			alert("PRISONER A DIED");
+			alert("PRISONER D DIED");
 			document.location.reload();
 		}
 	}
@@ -183,9 +211,12 @@ function detectBallCollision() {
 		if (ball2Y > paddle1Y - 10 && ball2Y < paddle1Y + paddleHeight + 10) {
 			dx2 = -dx2;
 			dy2 = (-(paddle1Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
+			if (dPressed) {
+				dx2 *= 1.5;
+			}
 		}
 		else {
-			alert("PRISONER A DIED");
+			alert("PRISONER D DIED");
 			document.location.reload();
 		}
 	}
@@ -194,9 +225,12 @@ function detectBallCollision() {
 		if (ball1Y > paddle2Y - 10 && ball1Y < paddle2Y + paddleHeight + 10) {
 			dx1 = -dx1;
 			dy1 = (-(paddle2Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
+			if (jPressed) {
+				dx1 *= 1.5;
+			}
 		}
 		else {
-			alert("PRISONER 0 DIED");
+			alert("PRISONER J DIED");
 			document.location.reload();
 		}
 	}
@@ -204,9 +238,12 @@ function detectBallCollision() {
 		if (ball2Y > paddle2Y - 10 && ball2Y < paddle2Y + paddleHeight + 10) {
 			dx2 = -dx2;
 			dy2 = (-(paddle2Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
+			if (jPressed) {
+				dx2 *= 1.5;
+			}
 		}
 		else {
-			alert("PRISONER 0 DIED");
+			alert("PRISONER J DIED");
 			document.location.reload();
 		}
 	}
@@ -220,8 +257,12 @@ function draw() {
 	drawBalls();
 	drawPaddle(0, paddle1Y);
 	drawPaddle(canvas.width - paddleWidth, paddle2Y);
-	drawKeyHints();
+	drawText();
 	
+	if (!brickCount) {
+		alert("You won?");
+		document.location.reload();
+	}
 	detectBallCollision();
 	
 	ball1X += dx1;
