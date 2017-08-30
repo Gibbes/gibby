@@ -5,24 +5,47 @@ var canvas = document.getElementById("PongBreaker");
 var ctx = canvas.getContext("2d");
 
 /** KEY HANDLING */
-var upPressed = false;
-var downPressed = false;
+var wPressed = false;
+var sPressed = false;
+var iPressed = false;
+var kPressed = false;
+var spacePressed = false;
 function keyPressHandler(e) {
 	"use strict";
-	if (e.keyCode === 38) {
-		upPressed = true;
+	
+	if (e.keyCode === 87) {
+		wPressed = true;
 	}
-	else if (e.keyCode === 40) {
-		downPressed = true;
+	else if (e.keyCode === 83) {
+		sPressed = true;
+	}
+	else if (e.keyCode === 73) {
+		iPressed = true;
+	}
+	else if (e.keyCode === 75) {
+		kPressed = true;
+	}
+	else if (e.keyCode === 32) {
+		spacePressed = true;
 	}
 }
 function keyReleaseHandler(e) {
 	"use strict";
-	if (e.keyCode === 38) {
-		upPressed = false;
+	
+	if (e.keyCode === 87) {
+		wPressed = false;
 	}
-	else if (e.keyCode === 40) {
-		downPressed = false;
+	else if (e.keyCode === 83) {
+		sPressed = false;
+	}
+	else if (e.keyCode === 73) {
+		iPressed = false;
+	}
+	else if (e.keyCode === 75) {
+		kPressed = false;
+	}
+	else if (e.keyCode === 32) {
+		spacePressed = false;
 	}
 }
 document.addEventListener("keydown", keyPressHandler, false);
@@ -128,34 +151,13 @@ function detectBallCollision() {
 		dy2 = -dy2;
 	}
 	
-	if (ball1X + dx1 > canvas.width - ballRadius) {
-		if (ball1Y > paddle2Y - 10 && ball1Y < paddle2Y + paddleHeight + 10) {
-			dx1 = -dx1;
-			dy1 = (-(paddle2Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
-		}
-		else {
-			alert("YOU DIED");
-			document.location.reload();
-		}
-	}
-	if (ball2X + dx2 > canvas.width - ballRadius) {
-		if (ball2Y > paddle2Y - 10 && ball2Y < paddle2Y + paddleHeight + 10) {
-			dx2 = -dx2;
-			dy2 = (-(paddle2Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
-		}
-		else {
-			alert("YOU DIED");
-			document.location.reload();
-		}
-	}
-	
 	if (ball1X + dx1 < ballRadius) {
 		if (ball1Y > paddle1Y - 10 && ball1Y < paddle1Y + paddleHeight + 10) {
 			dx1 = -dx1;
 			dy1 = (-(paddle1Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
 		}
 		else {
-			alert("YOU DIED");
+			alert("PRISONER A DIED");
 			document.location.reload();
 		}
 	}
@@ -165,11 +167,31 @@ function detectBallCollision() {
 			dy2 = (-(paddle1Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
 		}
 		else {
-			alert("YOU DIED");
+			alert("PRISONER A DIED");
 			document.location.reload();
 		}
 	}
 	
+	if (ball1X + dx1 > canvas.width - ballRadius) {
+		if (ball1Y > paddle2Y - 10 && ball1Y < paddle2Y + paddleHeight + 10) {
+			dx1 = -dx1;
+			dy1 = (-(paddle2Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
+		}
+		else {
+			alert("PRISONER 0 DIED");
+			document.location.reload();
+		}
+	}
+	if (ball2X + dx2 > canvas.width - ballRadius) {
+		if (ball2Y > paddle2Y - 10 && ball2Y < paddle2Y + paddleHeight + 10) {
+			dx2 = -dx2;
+			dy2 = (-(paddle2Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
+		}
+		else {
+			alert("PRISONER 0 DIED");
+			document.location.reload();
+		}
+	}
 }
 function draw() {
 	"use strict";
@@ -188,12 +210,16 @@ function draw() {
 	ball2X += dx2;
 	ball2Y += dy2;
 	
-	if (upPressed && paddle1Y > 0 && paddle2Y > 0) {
+	if (wPressed && paddle1Y > 0) {
 		paddle1Y -= 5;
+	}
+	else if (sPressed && paddle1Y < canvas.height - paddleHeight) {
+		paddle1Y += 5;
+	}
+	if (iPressed && paddle2Y > 0) {
 		paddle2Y -= 5;
 	}
-	else if (downPressed && paddle1Y < canvas.height - paddleHeight && paddle2Y < canvas.height - paddleHeight) {
-		paddle1Y += 5;
+	else if (kPressed && paddle2Y < canvas.height - paddleHeight) {
 		paddle2Y += 5;
 	}
 }
