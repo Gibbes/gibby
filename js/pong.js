@@ -34,9 +34,9 @@ var ball1Y = canvas.height / 2;
 var ball2X = canvas.width * (3 / 4);
 var ball2Y = canvas.height / 2;
 var dx1 = 1; 
-var dy1 = 1;
-var dx2 = 1;
-var dy2 = 1;
+var dy1 = Math.random() * 2 - 1;
+var dx2 = -1;
+var dy2 = Math.random() * 2 - 1;
 var ballRadius = 10;
 var paddleWidth = 10;
 var paddleHeight = 75;
@@ -129,8 +129,9 @@ function detectBallCollision() {
 	}
 	
 	if (ball1X + dx1 > canvas.width - ballRadius) {
-		if (ball1Y > paddle2Y && ball1Y < paddle2Y + paddleHeight) {
+		if (ball1Y > paddle2Y - 10 && ball1Y < paddle2Y + paddleHeight + 10) {
 			dx1 = -dx1;
+			dy1 = (-(paddle2Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
 		}
 		else {
 			alert("YOU DIED");
@@ -138,8 +139,9 @@ function detectBallCollision() {
 		}
 	}
 	if (ball2X + dx2 > canvas.width - ballRadius) {
-		if (ball2Y > paddle2Y && ball2Y < paddle2Y + paddleHeight) {
+		if (ball2Y > paddle2Y - 10 && ball2Y < paddle2Y + paddleHeight + 10) {
 			dx2 = -dx2;
+			dy2 = (-(paddle2Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
 		}
 		else {
 			alert("YOU DIED");
@@ -148,8 +150,9 @@ function detectBallCollision() {
 	}
 	
 	if (ball1X + dx1 < ballRadius) {
-		if (ball1Y > paddle1Y && ball1Y < paddle1Y + paddleHeight) {
+		if (ball1Y > paddle1Y - 10 && ball1Y < paddle1Y + paddleHeight + 10) {
 			dx1 = -dx1;
+			dy1 = (-(paddle1Y + paddleHeight / 2) + ball1Y) / (paddleHeight / 2);
 		}
 		else {
 			alert("YOU DIED");
@@ -157,8 +160,9 @@ function detectBallCollision() {
 		}
 	}
 	if (ball2X + dx2 < ballRadius) {
-		if (ball2Y > paddle1Y && ball2Y < paddle1Y + paddleHeight) {
+		if (ball2Y > paddle1Y - 10 && ball2Y < paddle1Y + paddleHeight + 10) {
 			dx2 = -dx2;
+			dy2 = (-(paddle1Y + paddleHeight / 2) + ball2Y) / (paddleHeight / 2);
 		}
 		else {
 			alert("YOU DIED");
