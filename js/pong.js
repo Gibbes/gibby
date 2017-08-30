@@ -183,7 +183,7 @@ function detectBrickCollision() {
 			}
 		}
 	}
-} 
+}
 function detectBallCollision() {
 	"use strict";
 	
@@ -290,9 +290,11 @@ function waitForSpace() {
 	"use strict";
 	
 	if (spacePressed) {
-		clearInterval(waitForSpace);
 		setInterval(draw, 10);
+	}
+	else {
+		setTimeout(waitForSpace, 100);
 	}
 }
 	
-setInterval(waitForSpace, 100);
+waitForSpace();
