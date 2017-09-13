@@ -197,8 +197,16 @@ function drawText() {
 	}
 	ctx.fillStyle = "#ffcc99";
 	ctx.font = "75px Arial";
-	ctx.fillText(brickCount, 60, 100);
+	if (brickCount > 9) {
+		ctx.fillText(brickCount, 60, 100);
+	} else {
+		ctx.fillText(brickCount, 100, 100);
+	}
 	ctx.fillText(brickCount, canvas.width - 150, 100);
+	ctx.fillStyle = "#ff7575";
+	ctx.fillText(player1Lives, 100, 400);
+	ctx.fillStyle = "#7282ff";
+	ctx.fillText(player2Lives, canvas.width - 150, 400);
 }
 /** Handles the logic behind brick hit/progression. **/
 function detectBrickCollision() {
@@ -242,7 +250,11 @@ function detectBallCollision() {
 		}
 		else {
 			player1Lives--;
-			reset("d_die");
+			if (player1Lives < 1) {
+				reset("d_die");
+			} else {
+				initBall1();
+			}
 		}
 	}
 	else if (ball2X + dx2 < ballRadius) {
@@ -256,7 +268,11 @@ function detectBallCollision() {
 		}
 		else {
 			player1Lives--;
-			reset("d_die");
+			if (player1Lives < 1) {
+				reset("d_die");
+			} else {
+				initBall2();
+			}
 		}
 	}
 	
@@ -271,7 +287,11 @@ function detectBallCollision() {
 		}
 		else {
 			player2Lives--;
-			reset("j_die");
+			if (player2Lives < 1) {
+				reset("j_die");
+			} else {
+				initBall1();
+			}
 		}
 	}
 	else if (ball2X + dx2 > canvas.width - ballRadius) {
@@ -285,7 +305,11 @@ function detectBallCollision() {
 		}
 		else {
 			player2Lives--;
-			reset("j_die");
+			if (player2Lives < 1) {
+				reset("j_die");
+			} else {
+				initBall2();
+			}
 		}
 	}
 }
@@ -367,7 +391,6 @@ function writeTitle() {
 	ctx.font = "30px Arial";
 	ctx.fillText("Press D and J to begin!", 20, 300);
 }
-/** Displays a short message and then returns the game to title/with everything reset. **/
 /** Waits for input from both the D and J keys. **/
 function waitForDJ() {
 	"use strict";
@@ -390,6 +413,7 @@ function beginTitle() {
 	waitForDJ();
 }
 beginTitle();
+/** Displays a short message and then returns the game to title/with everything reset. **/
 function reset(msg) {
 	"use strict";
 	
