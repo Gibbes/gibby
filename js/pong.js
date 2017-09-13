@@ -11,7 +11,6 @@ var iPressed = false;
 var kPressed = false;
 var dPressed = false;
 var jPressed = false;
-var spacePressed = false;
 function keyPressHandler(e) {
 	"use strict";
 	
@@ -26,9 +25,6 @@ function keyPressHandler(e) {
 	}
 	else if (e.keyCode === 75) {
 		kPressed = true;
-	}
-	else if (e.keyCode === 32) {
-		spacePressed = true;
 	}
 	else if (e.keyCode === 68) {
 		dPressed = true;
@@ -51,9 +47,6 @@ function keyReleaseHandler(e) {
 	}
 	else if (e.keyCode === 75) {
 		kPressed = false;
-	}
-	else if (e.keyCode === 32) {
-		spacePressed = false;
 	}
 	else if (e.keyCode === 68) {
 		dPressed = false;
@@ -158,8 +151,6 @@ function drawText() {
 	if (!kPressed) {
 		ctx.fillText("k", canvas.width - 8, paddle2Y + paddleHeight + 30);
 	}
-	ctx.fillText(brickCount, 8, 20);
-	ctx.fillText(brickCount, canvas.width - 25, 20);
 	if (!dPressed) {
 		ctx.fillStyle = "#ff7575";
 		ctx.fillText("D", 20, paddle1Y + paddleHeight / 2 + 5);
@@ -168,6 +159,10 @@ function drawText() {
 		ctx.fillStyle = "#7282ff";
 		ctx.fillText("J", canvas.width - 28, paddle2Y + paddleHeight / 2 + 5);
 	}
+	ctx.fillStyle = "#ffcc99";
+	ctx.font = "75px Arial";
+	ctx.fillText(brickCount, 60, 100);
+	ctx.fillText(brickCount, canvas.width - 150, 100);
 }
 function detectBrickCollision() {
 	"use strict";
@@ -260,12 +255,12 @@ function draw() {
 	"use strict";
 	
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	drawText();
 	detectBrickCollision();
 	drawBricks();
 	drawBalls();
 	drawPaddle(0, paddle1Y);
 	drawPaddle(canvas.width - paddleWidth, paddle2Y);
-	drawText();
 	
 	if (!brickCount) {
 		alert("You won?");
@@ -292,17 +287,49 @@ function draw() {
 	}
 }
 
-draw();
-
-function waitForSpace() {
+var darkCount = 0;
+function writeTitle() {
 	"use strict";
 	
-	if (spacePressed) {
+	ctx.font = "150px Arial";
+	ctx.fillStyle = "#f44242";
+	ctx.fillText("D", 20, 200);
+	ctx.fillStyle = "#4256f4";
+	ctx.fillText("J", 100, 200);
+	ctx.fillStyle = "#ff9966";
+	ctx.fillText("PONG", 200, 200);
+	ctx.fillStyle = "#ff7630";
+	switch(darkCount) {
+		case 0:
+			ctx.fillText("P", 200, 200);
+			break;
+		case 1:
+			ctx.fillText("O", 300, 200);
+			break;
+		case 2:
+			ctx.fillText("N", 417, 200);
+			break;
+		case 3:
+			ctx.fillText("G", 525, 200);
+	}
+	darkCount = (darkCount + 1) % 4;
+	ctx.font = "30px Arial";
+	ctx.fillText("Press D and J to begin!", 20, 300);
+}
+
+writeTitle();
+var drawInterval = setInterval(writeTitle, 100);
+
+function waitForDJ() {
+	"use strict";
+	
+	if (dPressed && jPressed) {
+		clearInterval(drawInterval);
 		setInterval(draw, 10);
 	}
 	else {
-		setTimeout(waitForSpace, 100);
+		setTimeout(waitForDJ, 100);
 	}
 }
 	
-waitForSpace();
+waitForDJ();
