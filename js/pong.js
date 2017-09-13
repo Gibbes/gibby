@@ -62,6 +62,7 @@ document.addEventListener("keyup", keyReleaseHandler, false);
 
 
 /** VARIABLE VALUES **/
+
 var ball1X = canvas.width * (1 / 4); 
 var ball1Y = canvas.height / 2;
 var ball1Fill = "#ff7630";
@@ -105,13 +106,19 @@ var brickPadding = 10;
 var brickOffsetTop = (canvas.height / 2) - (brickHeight + brickPadding) * (brickRowCount / 2) + (brickPadding / 2);
 var brickOffsetLeft = (canvas.width / 2) - (brickWidth + brickPadding) * (brickColumnCount / 2) + (brickPadding / 2);
 var bricks = [];
-for (var c = 0; c < brickColumnCount; c++) {
-	bricks[c] = [];
-	for (var r = 0; r < brickRowCount; r++) {
-		bricks[c][r] = [0, 0, 1];
-	}
-}
 var brickCount = 25;
+function initBricks() {
+	"use strict";
+	
+	for (var c = 0; c < brickColumnCount; c++) {
+		bricks[c] = [];
+		for (var r = 0; r < brickRowCount; r++) {
+			bricks[c][r] = [0, 0, 1];
+		}
+	brickCount = 25;
+}
+}
+initBricks();
 var player1Lives = 3;
 var player2Lives = 3;
 
@@ -318,12 +325,16 @@ function draw() {
 	}
 }
 
+
 /** INIT/TRANSITION HANDLING **/
+
 var darkCount = 0;
+var ascending = true;
 /** Draws a scintillating title screen with instructions for starting the game. **/
 function writeTitle() {
 	"use strict";
 	
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.font = "150px Arial";
 	ctx.fillStyle = "#f44242";
 	ctx.fillText("D", 20, 200);
@@ -345,18 +356,18 @@ function writeTitle() {
 		case 3:
 			ctx.fillText("G", 525, 200);
 	}
-	darkCount = (darkCount + 1) % 4;
+	if (ascending) {
+		darkCount++;
+	} else {
+		darkCount--;
+	}
+	if (darkCount === 0 || darkCount === 3) {
+		ascending = !ascending;
+	}
 	ctx.font = "30px Arial";
 	ctx.fillText("Press D and J to begin!", 20, 300);
 }
 /** Displays a short message and then returns the game to title/with everything reset. **/
-function reset(msg) {
-	"use strict";
-	
-	msg = "hi";
-}
-writeTitle();
-var drawInterval = setInterval(writeTitle, 100);
 /** Waits for input from both the D and J keys. **/
 function waitForDJ() {
 	"use strict";
@@ -369,4 +380,39 @@ function waitForDJ() {
 		setTimeout(waitForDJ, 100);
 	}
 }
-waitForDJ();
+var drawInterval = 0;
+/** Initializes state. **/
+function beginTitle() {
+	"use strict";
+	
+	writeTitle();
+	drawInterval = setInterval(writeTitle, 100);
+	waitForDJ();
+}
+beginTitle();
+function reset(msg) {
+	"use strict";
+	
+	clearInterval(drawInterval);
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	initBall1();
+	initBall2();
+	initBricks();
+	player1Lives = 3;
+	player2Lives = 3;
+	paddle1Y = (canvas.height - paddleHeight) / 2;
+	paddle2Y = (canvas.height - paddleHeight) / 2;
+	ctx.font = "30px Arial";
+	ctx.fillStyle = "#ff7630";
+	switch(msg) {
+		case "d_die":
+			ctx.fillText("Player J wins!", 20, 300);
+			break;
+		case "j_die":
+			ctx.fillText("Player D wins!", 20, 300);
+			break;
+		case "win":
+			ctx.fillText("Player D and Player J both win.", 20, 300);
+	}
+	setTimeout(beginTitle, 2000);
+}
