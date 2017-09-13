@@ -235,8 +235,7 @@ function detectBallCollision() {
 		}
 		else {
 			player1Lives--;
-			alert("PRISONER D DIED");
-			document.location.reload();
+			reset("d_die");
 		}
 	}
 	else if (ball2X + dx2 < ballRadius) {
@@ -250,8 +249,7 @@ function detectBallCollision() {
 		}
 		else {
 			player1Lives--;
-			alert("PRISONER D DIED");
-			document.location.reload();
+			reset("d_die");
 		}
 	}
 	
@@ -266,8 +264,7 @@ function detectBallCollision() {
 		}
 		else {
 			player2Lives--;
-			alert("PRISONER J DIED");
-			document.location.reload();
+			reset("j_die");
 		}
 	}
 	else if (ball2X + dx2 > canvas.width - ballRadius) {
@@ -281,8 +278,7 @@ function detectBallCollision() {
 		}
 		else {
 			player2Lives--;
-			alert("PRISONER J DIED");
-			document.location.reload();
+			reset("j_die");
 		}
 	}
 }
@@ -299,8 +295,7 @@ function draw() {
 	drawPaddle(canvas.width - paddleWidth, paddle2Y);
 	
 	if (!brickCount) {
-		alert("You won?");
-		document.location.reload();
+		reset("win");
 	}
 	detectBallCollision();
 	
@@ -323,6 +318,7 @@ function draw() {
 	}
 }
 
+/** INIT/TRANSITION HANDLING **/
 var darkCount = 0;
 /** Draws a scintillating title screen with instructions for starting the game. **/
 function writeTitle() {
@@ -353,10 +349,14 @@ function writeTitle() {
 	ctx.font = "30px Arial";
 	ctx.fillText("Press D and J to begin!", 20, 300);
 }
-
+/** Displays a short message and then returns the game to title/with everything reset. **/
+function reset(msg) {
+	"use strict";
+	
+	msg = "hi";
+}
 writeTitle();
 var drawInterval = setInterval(writeTitle, 100);
-
 /** Waits for input from both the D and J keys. **/
 function waitForDJ() {
 	"use strict";
@@ -369,5 +369,4 @@ function waitForDJ() {
 		setTimeout(waitForDJ, 100);
 	}
 }
-	
 waitForDJ();
