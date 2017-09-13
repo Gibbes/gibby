@@ -1,10 +1,12 @@
-/** PONG IMPLEMENTATION:
-by Michael Gibbes */
+/** DJ Pong
+by Michael Gibbes **/
 
 var canvas = document.getElementById("PongBreaker");
 var ctx = canvas.getContext("2d");
 
-/** KEY HANDLING */
+
+/** KEY HANDLING **/
+
 var wPressed = false;
 var sPressed = false;
 var iPressed = false;
@@ -58,17 +60,38 @@ function keyReleaseHandler(e) {
 document.addEventListener("keydown", keyPressHandler, false);
 document.addEventListener("keyup", keyReleaseHandler, false);
 
-/** VARIABLE VALUES */
+
+/** VARIABLE VALUES **/
 var ball1X = canvas.width * (1 / 4); 
 var ball1Y = canvas.height / 2;
-var ball2X = canvas.width * (3 / 4);
-var ball2Y = canvas.height / 2;
-var ball1Fill = "ff7630";
-var ball2Fill = "ff7630";
+var ball1Fill = "#ff7630";
 var dx1 = -1; 
 var dy1 = 0;
+var ball2X = canvas.width * (3 / 4);
+var ball2Y = canvas.height / 2;
+var ball2Fill = "#ff7630";
 var dx2 = 1;
 var dy2 = 0;
+function initBall1() {
+	"use strict";
+	
+	ball1X = canvas.width * (1 / 4); 
+	ball1Y = canvas.height / 2;
+	ball1Fill = "#ff7630";
+	dx1 = -1; 
+	dy1 = 0;
+}
+function initBall2() {
+	"use strict";
+	
+	ball2X = canvas.width * (3 / 4);
+	ball2Y = canvas.height / 2;
+	ball2Fill = "#ff7630";
+	dx2 = 1;
+	dy2 = 0;
+}
+initBall1();
+initBall2();
 var ballRadius = 10;
 var paddleWidth = 10;
 var paddleHeight = 75;
@@ -89,8 +112,12 @@ for (var c = 0; c < brickColumnCount; c++) {
 	}
 }
 var brickCount = 25;
+var player1Lives = 3;
+var player2Lives = 3;
 
-/** DRAW FUNCTIONS */
+
+/** DRAW FUNCTIONS. **/
+
 function drawBalls() {
 	"use strict";
 	
@@ -115,6 +142,7 @@ function drawPaddle(x, y) {
 	ctx.fill();
 	ctx.closePath();
 }
+/** Displays current matrix of bricks. **/
 function drawBricks() {
 	"use strict";
 	
@@ -134,6 +162,7 @@ function drawBricks() {
 		}
 	}
 }
+/** Draws the score and hint letters. **/
 function drawText() {
 	"use strict";
 	
@@ -164,6 +193,7 @@ function drawText() {
 	ctx.fillText(brickCount, 60, 100);
 	ctx.fillText(brickCount, canvas.width - 150, 100);
 }
+/** Handles the logic behind brick hit/progression. **/
 function detectBrickCollision() {
 	"use strict";
 	
@@ -183,6 +213,7 @@ function detectBrickCollision() {
 		}
 	}
 }
+/** Takes care of paddle hits and player depth. Also changes the color/speed of the ball if D or J is pressed. **/
 function detectBallCollision() {
 	"use strict";
 	
@@ -203,6 +234,7 @@ function detectBallCollision() {
 			}
 		}
 		else {
+			player1Lives--;
 			alert("PRISONER D DIED");
 			document.location.reload();
 		}
@@ -217,6 +249,7 @@ function detectBallCollision() {
 			}
 		}
 		else {
+			player1Lives--;
 			alert("PRISONER D DIED");
 			document.location.reload();
 		}
@@ -232,6 +265,7 @@ function detectBallCollision() {
 			}
 		}
 		else {
+			player2Lives--;
 			alert("PRISONER J DIED");
 			document.location.reload();
 		}
@@ -246,11 +280,13 @@ function detectBallCollision() {
 			}
 		}
 		else {
+			player2Lives--;
 			alert("PRISONER J DIED");
 			document.location.reload();
 		}
 	}
 }
+/** Calls all helper draws -- the one draw to end them all. **/
 function draw() {
 	"use strict";
 	
@@ -288,6 +324,7 @@ function draw() {
 }
 
 var darkCount = 0;
+/** Draws a scintillating title screen with instructions for starting the game. **/
 function writeTitle() {
 	"use strict";
 	
@@ -320,12 +357,13 @@ function writeTitle() {
 writeTitle();
 var drawInterval = setInterval(writeTitle, 100);
 
+/** Waits for input from both the D and J keys. **/
 function waitForDJ() {
 	"use strict";
 	
 	if (dPressed && jPressed) {
 		clearInterval(drawInterval);
-		setInterval(draw, 10);
+		drawInterval = setInterval(draw, 10);
 	}
 	else {
 		setTimeout(waitForDJ, 100);
