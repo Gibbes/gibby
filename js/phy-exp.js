@@ -21,18 +21,25 @@ var render = Render.create({
 	options: {
 		width: canvas.width,
 		height: canvas.height,
-		background: "#ff7630"
+		background: "#ff7630",
+		wireframes: false
 	}
 });
 
+var options = {
+	render: {
+		fillStyle: 'transparent',
+		lineWidth: 10
+	}
+};
 // create two boxes and a ground
-var boxA = Bodies.rectangle(400, 200, 80, 80);
-var boxB = Bodies.rectangle(450, 50, 80, 80);
+var boxA = Bodies.rectangle(400, 200, 80, 80, options);
+var boxB = Bodies.rectangle(450, 50, 80, 80, options);
 
 // add all of the bodies to the world
-World.add(engine.world, [boxA, boxB, Bodies.rectangle(300, 300, 80, 80)]);
+World.add(engine.world, [boxA, boxB, Bodies.rectangle(300, 300, 80, 80, options)]);
 
-var options = { 
+options = { 
 	isStatic: true,
 	render: {
 		fillStyle: 'transparent'
@@ -65,8 +72,3 @@ var mouseConstraint = MouseConstraint.create(engine, {
 });
 World.add(engine.world, mouseConstraint);
 render.mouse = mouse;
-
-Render.lookat(render, {
-	min: {x: 0, y: 0},
-	max: {x: canvas.width, y: canvas.height}
-});
