@@ -1,7 +1,7 @@
 /** DJ Pong
 by Michael Gibbes **/
 
-var canvas = document.getElementById("PongBreaker");
+var canvas = document.getElementById("DJPong");
 var ctx = canvas.getContext("2d");
 
 
