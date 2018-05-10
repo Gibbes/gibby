@@ -1,0 +1,268 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+<h1 align="middle">Project 1: Rasterizer</h1>
+<h2 align="middle">MICHAEL GIBBES, CS184-ABY</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>In this project, I implemented the logic for sampling pixels, or systematically assigning colors to pixels by checking their bounds inside of a triangle. The majority of the project focuses on improving sampling technique, whether that's by brute force (supersampling) or approximation (barycentric coordinates and linear interpolation). I learned that approximation methods are generally less costly than supersampling, each with its own tradeoff. And finally, these techniques are applied to texture mapping, where we sample both the screenspace (pixels) and the texture space (texels).</p>
+
+<h2 align="middle">Section I: Rasterization</h2>
+
+<h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+
+<p><code>SampleBuffer::fill_color</code>: This function overrides the contents of a <code>PixelColorStorage</code> structure. It converts OpenGL's 0-1 RGBA scale to a 0-255 color scale.</p>
+<p><code>DrawRend::rasterize_triangle</code>: The rasterization method I used is identical to the one presented in lecture. The process is described below:</p>
+<ol>
+  <li>Calculate the 3 vectors orthogonal to the 3 sides of the triangle.</li>
+  <li>Form a "bounding box" around the triangle, whose bounds come from the min and max of the x and y values of the 3 points.</li>
+  <li>Loop through all the pixels in the box. The point at the center of each pixel is tested against all 3 orthogonal vectors by taking the dot product of each vector with the point's vector. If all the products are greater than 0, then the pixel should be colored.</li>
+</ol>
+<p>Since the algorithm literally checks each sample in the bounding box, its runtime should be no worse than this. Notably, some aliasing occurs, as evidenced by the jaggies in the screenshots below.</p>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part1_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Full colored triangles.</figcaption>
+      </td>
+      <td>
+        <img src="images/part1_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Missing parts from aliasing.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part1_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Significant aliasing effects.</figcaption>
+      </td>
+      <td>
+        <img src="images/part1_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Jaggies in action.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+
+<p><code>SampleBuffer::get_pixel_color</code>: <code>PixelColorStorage</code> structures are extracted from the pixel and averaged together, returned as a single color.</p>
+<p><code>DrawRend::rasterize_triangle</code>: Rasterizing uses the exact same method as the previous part, except while checking the bounding box, the number of calculations
+increases by a factor of <code>sample_rate</code>. Conceptually, the logic does the same thing as dividing a pixel into a grid of <code>sample_rate</code> squares and then 
+checks the midpoint of each of those squares.</p>
+<p>Observe the improved effects on the red triangle from Part 1.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part2_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampled triangles.</figcaption>
+      </td>
+      <td>
+        <img src="images/part2_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate = 1.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part2_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate = 4.</figcaption>
+      </td>
+      <td>
+        <img src="images/part2_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Supersampling Rate = 16.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<h3 align="middle">Part 3: Transforms</h3>
+
+<p>Transforms <code>translate</code>, <code>scale</code>, and <code>rotate</code> achieved by formatting 3x3 matrices according to the 
+  homogenous matrices for these operations.</p>
+<p>Demonstrated below is result of implementing the transform matrices, a red block pose. However, for maximum awesomeness, the coloring has been converted to orange, the best color, and the standing pose to a dab, the best pose. Images are supersampled at 16 samples per pixel for maximum quality.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part3_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Boring pose.</figcaption>
+      </td>
+      <td>
+        <img src="images/part3_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Awesome pose.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 4: Barycentric coordinates</h3>
+
+<p><code>DrawRend::rasterize_triangle</code>: This modification to the rasterization pipeline involves calculating the alpha, beta, and gamma scalars for the barycentric coordinates. Each scalar corresponds to a vertex of the triangle. For example, for a Vertex A, the scalar <code>alpha</code> is calculated by dividing the distance of the sample point from side BC with A's distance from the opposite side. Take the below image generated from the program:</p>
+<div align="middle" style="width=100%">
+  <img src="images/part4_image1.png" align="middle" width="400px"/>
+  <figcaption align="middle">RGB gradient triangle.</figcaption>
+</div>
+<p>Let's say A is the red vertex. Pixels very close to A are red because they are roughly equidistant from side BC. Pixels closer to BC are not as red.</p>
+<p><code>ColorTri::color</code>: Given <code>alpha</code>, <code>beta</code>, and <code>gamma</code>, we can calculate the appropriate color by multiplying each triangle point's color with its corresponding scalar and then adding all the values up.</p>
+<div align="middle" style="width=100%">
+  <img src="images/part4_image2.png" align="middle" width="400px"/>
+  <figcaption align="middle">Barycentric color wheel demonstration.</figcaption>
+</div>
+
+<h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+
+<p>Pixel sampling in this case is not unlike the sampling I was doing before. However, in this case, there is some 2D texture that we want to map to a triangle mesh, and we do so by mapping the (x, y) pixel location in screen space to the (u, v) position in texture space and then sampling the surrounding "texels".</p>
+<p><b>Nearest pixel</b> sampling simply takes the exact texel that (u, v) is located inside and maps its values back to screen space. <b>Bilinear</b> sampling uses a 4-pixel square around the nearest texel and interpolates the values at these 4 texels.</p>
+<p><code>DrawRend::rasterize_triangle</code>: Nothing too much different here except it's now populating a <code>SampleParams</code> structure with the desired sampling method.</p>
+<p><code>TexTri::color</code>: This method calculates the (u, v) values from the point's barymetric values passed in from <code>rasterize_triangle</code> and populates the data structrure with them.</p>
+<p><code>Texture::sample</code>: Intermediate method that chooses between specific sampling methods.</p>
+<p><code>Texture::sample_nearest</code>: Returns the <code>Color</code> corresponding to the texel value at <code>(floor(u), floor(v))</code>.</p>
+<p><code>Texture::sample_bilinear</code>: Interpolates between the 4 nearest texel points.</p>
+<p>Let's look at an example generated by the first texmapping:</p>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part5_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest, sampling rate = 1.</figcaption>
+      </td>
+      <td>
+        <img src="images/part5_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest, sampling rate = 16.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part5_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Bilinear, sampling rate = 1.</figcaption>
+      </td>
+      <td>
+        <img src="images/part5_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Bilinear, sampling rate = 16.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<p>Bilinear sampling does better than nearest pixel since nearest pixel can misrepresent fine detail (i.e. frequency is much faster than sampling frequency). That's apparent from the way bilinear represents the structure of the islands above at fair quality even at low sampling. It's harder to tell the difference with increased supersampling just because increasing sampling frequency is bound to reduce the effects of aliasing.</p>
+
+<h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+
+<p>The rasterizer now a larger multitude of options as a result of implementing level sampling. The levels of the mipmap represent lower resolution versions of the same image. 
+The intention is to increase the quality/rendering speed of the image by using high resolutions for close-up details and low resolutions for far away details, at the cost of the 
+memory used to store the mipmap image. The way mipmapping was implemented:</p>
+<p><code>DrawRend::rasterize_triangle</code>: I added calculations for calculating the barycentric coordinates of the adjacent horizontal and vertical points.</p>
+<p><code>TexTri::color</code>: This function now contains arithmetic for calculating the uv values of the dx and dy values.</p>
+<p><code>Texture::sample</code>: Additional support for GUI options, including 3 different level samplings. The first uses default mipmap level 0, the second calculates the
+appropriate mipmap level, and the third finds the nearest level and uses an adjacent level. The third option enables trilinear sampling when combined with bilinear sampling.</p>
+<p>Let's make a final evaluation of these texture-filtering methods:</p>
+<ol>
+  <li><b>Supersampling</b>: high supersampling results in great quality and eliminates antialiasing artifacts effectively, at the cost of heavy computational power -- slow speeds and heavy memory use.</li>
+  <li><b>Bilinear sampling</b>: great for smoothing out pixels by approximating values "between" the texel points. Pure bilinear filtering is not as effective as supersampling, but it is less costly.</li>
+  <li><b>Mipmapping</b>: greatly reduces aliasing and increases computation speed at the cost of increased memory use.</li>
+  <li><b>Trilinear sampling</b>: a combination of mipmapping and bilinear sampling, so still not as costly as supersampling, but with the same tradeoffs. Trilinear filtering also results in blurrier high-frequency details.</li>
+</ol>
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Pure supersampling.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Pure bilinear filtering.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part6_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Nearest mipmap level.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Trilinear filtering.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<p>Please have this detailed png of an orange dragon I designed (art courtesy of Chiara Manderioli) but with different filtering methods.</p>
+  <div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image5.png" align="middle" width="400px"/>
+        <figcaption align="middle">Original dragon.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+  <div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image6.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_ZERO and P_NEAREST.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image9.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_NEAREST and P_NEAREST.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part6_image8.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_ZERO and P_LINEAR.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image7.png" align="middle" width="400px"/>
+        <figcaption align="middle">L_NEAREST and P_LINEAR.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<p>Note how changing to nearest level doesn't have a significant effect on the dragon's face because of the heavy detail, but it does alter the grainy quality of the wings. And that's all for project 1! :D</p>
+
+<h2 align="middle">Section III: Art Competition</h2>
+<p>I really wanted to do this but I ran out of time because I was debugging all last day. :(</p>
+
+</body>
+</html>

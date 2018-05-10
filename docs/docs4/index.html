@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    body {
+        padding: 100px;
+        width: 1000px;
+        margin: auto;
+        text-align: left;
+        font-weight: 300;
+        font-family: 'Open Sans', sans-serif;
+        color: #121212;
+    }
+    h1, h2, h3, h4 {
+        font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style> 
+<title>CS 184 ClothSim</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+<h1 align="middle">Project 4: Cloth Simulator</h1>
+<h2 align="middle">MICHAEL GIBBES, CS184-ABY</h2>
+
+<br><br>
+
+<h2 align="middle">Overview</h2>
+<p>One major problem in computer graphics (one that I especially want to explore in my career!) is realistically simulating objects, materials, and other aspects of the real world. This project focuses specifically on simulating cloth movement. The underlying data structure for this endeavor is the mass/spring mesh, which is implemented in the first part. The proceeding parts attempt to produce interesting visual effects by considering the forces acting on points of the mesh, collisions with other objects, and self-collisions. Self-collisions in particular present a challenge because in order to check efficiently, some careful data organization is required (i.e. hashing).</p>
+
+<h2 align="middle">Part 1: Masses and Springs</h2>
+<p>The goal here was to initialize a "net" of mass points, or virtual representations of weights for the cloth. Each point is connected to other points by 3 different types of springs: structural (vertical/horizontal), shearing (diagonal), and bending (like structural but connects every other mass instead of adjacent ones).</p>
+<p>Here is a 50x50 mesh of connected mass points from a couple of angles:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part1_image1.png" width="480px" />
+                <figcaption align="middle">Angled</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part1_image2.png" width="480px" />
+                <figcaption align="middle">Close-Up</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>We'll also observe the difference between the springs:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part1_image3.png" width="300px" />
+                <figcaption align="middle">Structural/Bending Only</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part1_image4.png" width="300px" />
+                <figcaption align="middle">Shearing Only</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part1_image5.png" width="300px" />
+                <figcaption align="middle">All</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>As expected, showing all structural/bending springs results in a boxy mesh, while showing only shearing springs results in a boxy mesh diagonal to the previous one.</p>
+
+<h2 align="middle">Part 2: Simulation via Numerical Integration</h2>
+<p>This step aims to add some movement to the mass/spring mesh using acceleration forces (gravity) and spring forces (pressure to maintain original spring length). Forces apply to all point masses except pinned ones. On each timestep of the simulation, the position of each mass gets updated according to the forces acting upon it, with the constraint that the spring can't stretch more than 10% of its rest length (<a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.84.1732&rep=rep1&type=pdf">SIGGRAPH 1995 Provot</a>). This prevents the cloth from becoming unreasonably deformed. I tried the simulation without the constraint, and the result was not unlike watery pizza dough.</p>
+<p>An exploration of differing properties with a 2-pinned cloth:</p>
+<ul>
+    <li><b>Spring Constant</b> (ks): This constant determines how strong the spring forces are. <br>
+    At 50 (N/m), the cloth droops, kind of like a synthetic, stretchy fabric. <br>
+    At 5000 (N/m), the structure is stiffer, more like a tablecloth. <br>
+    And at 50000 (N/m), the cloth barely yields to gravity.</li>
+    <div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part2_image1.png" width="300px" />
+                    <figcaption align="middle">50 (N/m)</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part2_image2.png" width="300px" />
+                    <figcaption align="middle">5000 (N/m)</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part2_image3.png" width="300px" />
+                    <figcaption align="middle">50000 (N/m)</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <li><b>Density</b> (ks): The density of the cloth affects its mass, so unlike the spring constant, increasing density should cause more visible gravity effects. <br>
+    At 1 (g/cm^2), the dip in the cloth is highest, and the mesh is prone to move about wildly and fall slowly before settling. <br>
+    The default, 15 (g/cm^2), is shown for comparison. <br>
+    At 100 (g/cm^2), faster fall and lower dip.</li>
+    <div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part2_image4.png" width="300px" />
+                    <figcaption align="middle">1 (g/cm^2)</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part2_image5.png" width="300px" />
+                    <figcaption align="middle">15 (g/cm^2)</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part2_image6.png" width="300px" />
+                    <figcaption align="middle">100 (g/cm^2)</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <li><b>Damping</b>: This determines how quickly the velocity of each point dies due to friction and heat loss. <br>
+    With a value of 0%, the mesh quickly builds velocity from the drop and never stops wildly swaying about. <br>
+    20% is shown for default. <br>
+    At much higher percentages, like 80% and beyond, the cloth flops down slowly without much bounce. <br>
+    Damping does not affect the resting state, but very low, non-zero percentages will take a long time to converge. Below are screenshots mid-fall:</li>
+    <div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part2_image7.png" width="300px" />
+                    <figcaption align="middle">0%</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part2_image8.png" width="300px" />
+                    <figcaption align="middle">~20%</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part2_image9.png" width="300px" />
+                    <figcaption align="middle">~80%</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+</ul>
+<p>Finally, 4-pinned cloth at default parameters, also in orange since it's such an amazing color.</p>
+<div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part2_image10.png" width="600px" />
+                    <figcaption align="middle">A magnificent 4-pinned cloth.</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+</ul>
+
+<h2 align="middle">Part 3: Handling Collisions with Other Objects</h2>
+<p>To make the interaction more engaging without having to pin cloth corners, other primitives that emulate solid objects can be placed in the scene. The first is the sphere. To deal with sphere collisions, every point mass gets tested against the sphere, and if there is a collision, the point mass gets bumped out to rest on the surface of the sphere using the normal at the closest point of collision. The resting state of an orange cloth draped over a sphere at different densities:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part3_image1.png" width="300px" />
+                <figcaption align="middle">500 (N/m)</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part3_image2.png" width="300px" />
+                <figcaption align="middle">5000 (N/m)</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part3_image3.png" width="300px" />
+                <figcaption align="middle">50000 (N/m)</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<br>
+<p>Note how as the spring gets stiffer, the cloth conforms less to the sphere, and fewer folds form. The awkward angle of the folds for the stiffest spring in the 3rd screenshot unfortunately reveals the mesh (see how the shading is jagged). Also interesting to note -- after waiting a tad longer, the stiffest cloth will actually slowly slide off the sphere. Its position is destabilized by its rigidity.</p>
+<p>Planes are similar to spheres except instead of checking whether a point is "inside", collision corrections are applied when point masses "cross" the plane. A small offset gets subtracted from the correction to make sure points will be re-detected. As always, the cloth could be nothing but orange:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part3_image4.png" width="600px" />
+                <figcaption align="middle">Peaceful resting place.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h2 align="middle">Part 4: Handling Self-Collisions</h2>
+<p>This part aims to allow the mesh to realistically fold on itself without clipping. The result isn't perfect since it doesn't account for friction or heat loss, but it is satisfying to watch the cloth fold in on itself more realistically.</p>
+<p>If you were to check for collisions on every point mass to every point mass, the runtime would be O(n^2) where n is the number of point masses. Since that's pretty bad, we use a special "spatial" hashmap. The entire region is divided up into 3D boxes that are the dimensions of the original resting length of a single spring times 3.0. Points in the same regional box get hashed into the same mapping. Because it's likely the cloth won't deform so badly that it's contained inside one of these small 3D boxes, the algorithm usually only checks each point mass against 1-5 other point masses. Thus, the runtime actually ends up being roughly O(n), which is really the best you could do without approximations. </p>
+<p>Below is the progression of a cloth folding in on itself.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part4_image1.png" width="300px" />
+                <figcaption align="middle">Initial position.</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image2.png" width="300px" />
+                <figcaption align="middle">Halfway fall.</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image3.png" width="300px" />
+                <figcaption align="middle">Resting position.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>An exploration of how the cloth falls at different densities and stiffness (compare rest image to above):</p>
+<ul>
+    <li><b>Stiffness</b>: At very low stiffness, the cloth folds in a more concentrated manner and becomes turbulant as a lot of collisions happen. At higher stiffness, it spreads out and comes to a rest state faster.</li>
+    <div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part4_image4.png" width="480px" />
+                    <figcaption align="middle">Low stiffness.</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part4_image5.png" width="480px" />
+                    <figcaption align="middle">High stiffness</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <li><b>Density</b>: With lower density, the structure falls more slowly, but its resting state is not as flat. With higher density, it falls quickly, and its resting state is flat and in a state of turmoil. 
+    <div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part4_image6.png" width="480px" />
+                    <figcaption align="middle">Low density.</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part4_image7.png" width="480px" />
+                    <figcaption align="middle">High density</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+</ul>
+<p>Overall, this has been a fun exploration of simulating fabric, of course not without a few bugs and discrepancies (i.e. generating random z-coordinates so that the cloth actually falls in on itself, troubleshooting collision correction vectors, etc.). I took one final screenshot of the cloth in a nice semi-fall.</p>
+<div align="center">
+        <table style="width=100%">
+            <tr>
+                <td align="middle">
+                    <img src="images/part4_image8.png" width="600px" />
+                    <figcaption align="middle">A goodbye to the 4th and last CS 184 project.</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

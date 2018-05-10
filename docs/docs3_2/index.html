@@ -1,0 +1,360 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    body {
+        padding: 100px;
+        width: 1000px;
+        margin: auto;
+        text-align: left;
+        font-weight: 300;
+        font-family: 'Open Sans', sans-serif;
+        color: #121212;
+    }
+    h1, h2, h3, h4 {
+        font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style> 
+<title>CS 184 PathTracer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+<h1 align="middle">Assignment 3: PathTracer</h1>
+<h2 align="middle">MICHAEL GIBBES, CS184-ABY</h2>
+
+<br><br>
+
+<p><b>A short foreword, in celebration of fixing a major bug in the previous project: per Dillon's suggestion, the dimness was a precision effect. I was able to ameliorate the dimness problem by using doubles in triangle intersection rather than floats. After weeks and weeks of dealing with this dimness, it feels greatly relieving to have properly lit scenes!</b></p>
+
+<h2 align="middle">Overview</h2>
+<p>The purpose of this project is to extend the raytracer I developed in the previous project, adding new material-light interactions, environmental lighting, and even real-time rendering. The first two parts deal with reflective and refractive substances, using experimental data and transformations to best simulate their appearance. The next part enables 3D scenes (especially unlit ones) to be illuminated by the brightness of a jpeg image background rather than a pre-determined area or point light. I also explore simulating light exposure through a camera aperture. Finally, and separately from the main renderer, is an in-browser real-time renderer using Node.js and OpenGL libraries, <a href="gl/index.html">available here.</a></p>
+
+
+<h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+<p>The mirror bsdf material uses pure reflection, while the glass bsdf uses a mixture of reflection and refraction probabilistically determined by <a href="https://en.wikipedia.org/wiki/Schlick's_approximation">R of Schlick's approximation</a>. The actual process of reflection is just a simple redirection of the ray, while refraction is slightly different, using Snell's law to redirect the ray.</p>
+<p>The following images were generated using mirror and glass bsdfs at 1028 samples per pixel and 4 samples per light.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part1_image1.png" width="480px" />
+                <figcaption align="middle">Max Ray = 0</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part1_image2.png" width="480px" />
+                <figcaption align="middle">Max Ray = 1</figcaption>
+            </td>
+        </tr>
+        <br>
+        <tr>
+            <td align="middle">
+                <img src="images/part1_image3.png" width="480px" />
+                <figcaption align="middle">Max Ray = 2</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part1_image4.png" width="480px" />
+                <figcaption align="middle">Max Ray = 3</figcaption>
+            </td>
+        </tr>
+        <br>
+        <tr>
+            <td align="middle">
+                <img src="images/part1_image5.png" width="480px" />
+                <figcaption align="middle">Max Ray = 4</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part1_image6.png" width="480px" />
+                <figcaption align="middle">Max Ray = 5</figcaption>
+            </td>
+        </tr>
+        <br>
+        <tr>
+            <td align="middle">
+                <img src="images/part1_image7.png" width="480px" />
+                <figcaption align="middle">Max Ray = 100</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>At each step, you can observe changes:</p>
+<ol>
+    <li>0 bounces only includes the original light source.</li>
+    <li>1 bounce includes all direct lighting (so spheres are black).</li>
+    <li>2 bounces includes reflections off objects and most indirect lighting (mirror now works and glass is moderately reflective).</li>
+    <li>3 bounces includes the transparency of glass (two bounces are required to traverse the glass).</li>
+    <li>4 bounces includes the light from the source bouncing through the glass onto the floor.</li>
+    <li>5 bounces includes a small amount of light from the source refracting onto the blue wall.</li>
+    <li>100 bounces includes no new features since 5 is the minimum bounce for the above features. It is slightly more noisy because of the increased bounce.</li>
+</ol>
+<p><b>One of the most difficult parts in this part was getting rid of noise. In the end, this required normalizing the in-going vectors calculated for many of the bsdfs.</b></p>
+
+<h2 align="middle">Part 2: Microfacet Material</h2>
+<p>Microfacets are implemented using <a href="https://refractiveindex.info/">data from real measurements</a>. The final reflectance returned by the BSDF of a microfacet material is a combination of the shadowing-masking term and the following:</p>
+<ol>
+    <li><b>Fresnel term</b>: the interface between two materials (usually air and metal)</li>
+    <li><b>Normal distribution term</b>: returns a value based on the ingoing and outgoing rays</li>
+</ol>
+<p>Below are renderings of the dragon at 256 samples per pixel, 1 sample per light, and max bounce 7, comparing alpha factors for glossiness:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part2_image1.png" width="480px" />
+                <figcaption align="middle">alpha = 0.5</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part2_image2.png" width="480px" />
+                <figcaption align="middle">alpha = 0.25</figcaption>
+            </td>
+        </tr>
+        <tr>
+            <td align="middle">
+                <img src="images/part2_image3.png" width="480px" />
+                <figcaption align="middle">alpha = 0.05</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part2_image4.png" width="480px" />
+                <figcaption align="middle">alpha = 0.005</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>As expected, as alpha grows smaller, the dragon's surface grows glossier, since alpha is a representation of the material's roughness. Note that noise does naturally increase because of reflectivity, and after a lot of troubleshooting, I couldn't really get the pronounced white noise out for very small values of alpha.</p>
+<p>In the implementation of sampling the ingoing vector, we also use a Beckman distribution to make the microfacet surface converge faster to their proper value. Below is a comparison with and without the Beckman values, at the low sampling rate of 64 samples/pixel. As you can observe, importance sampling causes the bronze appearance to converge much faster: </p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part2_image5.png" width="480px" />
+                <figcaption align="middle">Hemisphere</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part2_image6.png" width="480px" />
+                <figcaption align="middle">Importance (Beckman)</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Finally, using the reflectance values from experimental data, we can simulate different types of metal:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part2_image7.png" width="480px" />
+                <figcaption align="middle">Cobalt, Glossy</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part2_image8.png" width="480px" />
+                <figcaption align="middle">Diesel Soot, Diffuse</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h2 align="middle">Part 3: Environment Map Lights</h2>
+<p>Instead of receiving illumination from an area or point light for this part, the mesh is instead illuminated by the contents of a photograph, the lighter portions of the image receiving precedence for use in lighting the object. A probability distribution is developed to give more importance to bright light sources, forming the probability distribution function as such. The photograph used is doge.expr, and its probability distribution is shown below.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/doge.jpg" width="960px" />
+                <figcaption align="middle">Original image</figcaption>
+            </td>
+        </tr>
+        <br>
+        <tr>
+            <td align="middle">
+                <img src="images/doge_debug.png" width="960px" />
+                <figcaption align="middle">PDF image</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Let's compare what happens when we use the PDF (importance) vs. when we choose a random ray (hemisphere) on a Lambertian bunny. These samples are taken at 4 per pixel and 64 per light.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part3_image1.png" width="480px" />
+                <figcaption align="middle">Hemisphere</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part3_image2.png" width="480px" />
+                <figcaption align="middle">Importance</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>There seems to be a slight difference in the noise levels, though not considerable. This is kind of expected. On the other hand, the noise levels do seem to be uniformly a little higher than I would like, but I wasn't able to get a cleaner convergence at 4 samples/pixel. And now on a microfacet bronze bunny:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part3_image3.png" width="480px" />
+                <figcaption align="middle">Hemisphere</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part3_image4.png" width="480px" />
+                <figcaption align="middle">Importance</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Interestingly, the noise difference on bronze is more noticeable than for the Lambertian. This is probably due to the higher reflectivity of microfacets -- for example, view the bunnies in Part 2, all taken at low sampling rates.</p>
+<p>I tried a higher sampling rate on the bunny to see if the noise goes away.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part3_image5.png" width="480px" />
+                <figcaption align="middle">Copper bunny sampled at 128 px/sample.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Looks like it did, at the cost of some artifacts in the shadows, likely due to random readings from the bright sky in doge.expr throwing off the brightness.</p>
+
+<h2 align="middle">Part 4: Depth of Field</h2>
+<p>The purpose of this part is to simulate the effect of a thin lens to get an artistic, camera-esque effect. The default will be set at a focal depth of 1.7 and an aperture size of 0.0883883 per Piazza, with a sampling rate of 256 per pixel, 4 per light, and 5 ray bounces at max.</p>
+<p>The following series of images change with focal depth:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part4_image1.png" width="240px" />
+                <figcaption align="middle">depth = 1.4 </figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image2.png" width="240px" />
+                <figcaption align="middle">depth = 1.7 </figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image3.png" width="240px" />
+                <figcaption align="middle">depth = 2.0 </figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image4.png" width="240px" />
+                <figcaption align="middle">depth = 2.3 </figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>These ones instead change with aperture size.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part4_image5.png" width="240px" />
+                <figcaption align="middle">size =  0.02</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image6.png" width="240px" />
+                <figcaption align="middle">size =  0.08</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image7.png" width="240px" />
+                <figcaption align="middle">size = 0.12</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part4_image8.png" width="240px" />
+                <figcaption align="middle">size = 0.18</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Notice how as the aperture size increases, the exposure changes so that the full image is much blurrier than the original. The smallest chosen aperture size appears quite sharp (though going even smaller might cause blur issues in an actual camera due to diffraction). Increasing the focal distance, of course, makes objects that are further in the scene sharper than their surroundings.</p>
+<p>For funzies, I rendered my cobalt microfacet at 4096 samples/pixel and 64 samples/light, and this is how it turned out:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part4_image9.png" width="480px" />
+                <figcaption align="middle">Dragons are honestly the coolest.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h2 align="middle">Part 5: GLSL Shaders</h2>
+<p>Before anything else, check out <a href="gl/index.html">the interactive OpenGL page</a>!</p>
+<p>All of the following part is rendered in real time using Node.js and the GLSL library. The shader program used computes values very efficiently in parallel, taking advantage of GPU power. To provide the program with its algorithm, I used two kinds of files:</p>
+<ul>
+    <li> .vert - changes the geometry/shape of the mesh and computes necessary values, like normals and screen positions</li>
+    <li> .frag - the fragments resulting from rasterization are further processed, often with knowledge of the viewpoint, the light source, and the position and normal of points on the structure</li>
+</ul>
+<p>The Blinn-Phong shading model uses three components to achieve a plasticky appearance: ambient, diffuse, and specular lighting. Ambient lighting is global for the object and prevents shadows from being too dark. Diffuse, or lambertian, lighting simulates the natural bounce of light off of a non-glossy material directly from the light source. Specular lighting results from the reflection of light towards the viewer (thus, it's the only light that changes as our viewpoint changes, as you can observe in the interactive view.)</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part5_image1.png" width="480px" />
+                <figcaption align="middle">Ambient only.</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part5_image2.png" width="480px" />
+                <figcaption align="middle">Lambertian only.</figcaption>
+            </td>
+        </tr>
+        <tr>
+            <td align="middle">
+                <img src="images/part5_image3.png" width="480px" />
+                <figcaption align="middle">Specular only.</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part5_image4.png" width="480px" />
+                <figcaption align="middle">Blinn-Phong.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>As for texture mapping, I used a CC0 creative commons stock photo of yellow and orange triangles and mapped it onto a sphere to produce a beachball-like effect.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part5_image5.png" width="600px" />
+                <figcaption align="middle">Beachball texture-map.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Bump shading and displacement had an interesting effect on the shape of the sphere. Because the weighting function, h, uses the r-value of the texture to determine intensity, it seems that the red triangles were not included as much in the bump map. Displacing this texture by a factor of 2 produced a "scaly" texture.</p>
+<p>Instead, I used the stock displacement of the ABC characters, and below are the results:</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part5_image6.png" width="480px" />
+                <figcaption align="middle">Bump-map.</figcaption>
+            </td>
+            <td align="middle">
+                <img src="images/part5_image7.png" width="480px" />
+                <figcaption align="middle">Displaced.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+<p>Upon increasing the coarseness of the mesh by reducing the number of primitives, the result becomes more blurry and jagged. For example, with the orange triangle ball, the triangles are less discernable. Horizontal striation artifacts result from this, probably aliasing. Increasing the number of mesh elements makes the triangle smoother, but at the cost of performance. Actually, having too many mesh elements makes some artifacts appear in the displacement, probably as a result of the texture to object ratio.</p>
+<p>For the last part, I was able to create my own "orange light" effect by taking the hexadecimal value for orange, 0xFF7630, and converting that into a 3D GLSL vector. I dotted this vector with the ambient and diffuse lighting of the Blinn-Phong model (not specular since I figured pure white light would make for a nice contrast) and used this shading algorithm on the cube below.</p>
+<div align="center">
+    <table style="width=100%">
+        <tr>
+            <td align="middle">
+                <img src="images/part5_image8.png" width="600px" />
+                <figcaption align="middle">Orange is a creative color.</figcaption>
+            </td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>
+
+
+
+
