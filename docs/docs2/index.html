@@ -1,0 +1,355 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Mesh Editor</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+<h1 align="middle">Project 2: Mesh Editor</h1>
+<h2 align="middle">MICHAEL GIBBES, CS184-ABY</h2>
+
+<br><br>
+
+<h2 align="middle">Overview</h2>
+<p>This project explores two different methods for producing smooth surfaces: constructing them from Bezier curves using the de Casteljau method and editing existing COLLADA meshes systematically. For the first method, producing Bezier curves involves layers of linear interpolation. For the second method, we explore methods for producing more realistic shading with existing vertex data. Loop subdivision will come into play for increasing the complexity of a mesh, effectively smoothing out the structure by supersampling.</p>
+
+<h2 align="middle">Section I: Bezier Curves and Surfaces</h2>
+
+<h3 align="middle">Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
+
+<p>de Casteljau's algorithm is a method for designing Bezier curves that uses linear interpolation to determine the location of a point in space at time t.
+For the sake of a 2D Bezier curve such as the ones shown below, the algorithm forms a pyramid of vectors of height D, where D is the polynomial degree of the curve.
+Every point on this curve is the "top" of a de Casteljau pyramid.</p>
+
+<p>The following is the progression of de Casteljau evaluation for a degree 6 Bezier curve.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part1_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Step 0.</figcaption>
+      </td>
+      <td>
+        <img src="images/part1_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Step 1.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part1_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Step 2.</figcaption>
+      </td>
+      <td>
+        <img src="images/part1_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Step 3.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part1_image5.png" align="middle" width="400px"/>
+        <figcaption align="middle">Step 4.</figcaption>
+      </td>
+      <td>
+        <img src="images/part1_image6.png" align="middle" width="400px"/>
+        <figcaption align="middle">Step 5.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>The value of t and of the control points can also be tweaked:</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part1_image7.png" align="middle" width="400px"/>
+        <figcaption align="middle">Increased t for more interesting interpolation.</figcaption>
+      </td>
+      <td>
+        <img src="images/part1_image8.png" align="middle" width="400px"/>
+        <figcaption align="middle">Changed control points.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
+
+<p>The next part uses the same pyramid algorithm, but this time to generate a surface. For a point (u, v) on a plane and with a 4x4 grid of bezier curves, 
+  the algorithm generates a temporary Bezier curve using a set of interpolated vectors from the "u" axis, and then generates a final interpolated vector 
+using v and the temporary curve. By this method, we have a systematic way to determine the exact location of any point on the surface along the u-v plane.</p>
+
+<p>Below is the famous Bezier teapot generated from this algorithm:</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part2_image1.png" align="middle" width="800px"/>
+        <figcaption align="middle">Teapot using Bezier surfaces.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 3: Average normals for half-edge meshes</h3>
+
+<p>To find the normal of a face from vertex v, we take the two edges connected to v. EDGE1 is the half-edge corresponding to v (pointing away from it), and EDGE2 is the halfedge corresponding to EDGE1's next next halfedge (pointing towards v).</p>
+<p>By the right-hand rule where we have two vectors u and v, EDGE1 is like v and EDGE2 is like u. So, EDGE2 X EDGE1 is the area-weighted normal.</p>
+<p>The smoothed normal is the sum of all area-weighted normals around the vertex. Below is the before and after screenshots for smoothed normals.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part3_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Without smoothed normals.</figcaption>
+      </td>
+      <td>
+        <img src="images/part3_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">With smoothed normals.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h3 align="middle">Part 4: Half-edge flip</h3>
+
+<p>The flip operation wasn't so much a debugging journey for me as it was my being lazy... and then my having to not be lazy. I approached the flip initially by preserving the edge's halfedge and twin halfedge.</p>
+<p>Seems like a good approach, since that means you don't need to worry about the twin attribute, and you just have to rearrange the next attribute for all 6 halfedges.</p>
+<p>However, some of the faces were disappearing, so I decided to make a detailed map of the two triangles, and then yes, it was like solving a puzzle in a Zelda dungeon (is that epic enough?). In the end, I modified all pointers for halfedges, faces, and vertices (but not twin or edge attributes or edges themselves).</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part4_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Original, no flips.</figcaption>
+      </td>
+      <td>
+        <img src="images/part4_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">One flip alters the shape/shading.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part4_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">I freaked since I thought the face was gone.</figcaption>
+      </td>
+      <td>
+        <img src="images/part4_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Turns out it was just blocking a lot of light.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>For a hopefully thorough test of the flip functionality, I tried to make a dent in the side of the teapot.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part4_image5.png" align="middle" width="400px"/>
+        <figcaption align="middle">Dent level 1.</figcaption>
+      </td>
+      <td>
+        <img src="images/part4_image6.png" align="middle" width="400px"/>
+        <figcaption align="middle">Dent level 2.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/part4_image7.png" align="middle" width="400px"/>
+        <figcaption align="middle">Dent level 3.</figcaption>
+      </td>
+      <td>
+        <img src="images/part4_image8.png" align="middle" width="400px"/>
+        <figcaption align="middle">Final flip from a different perspective.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h3 align="middle">Part 5: Half-edge split</h3>
+
+<p>Because of the increased complexity of the split algorithm and the need to allocate additional memory, I decided to draw out a detailed diagram. This is pretty much what guided all of my logic in implementing the split operation, and surprisingly enough, it worked on the first try, with a slight bit of tweaking (e.g. forgot to position the new vertex properly and had a typo in the edge allocations).</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part5_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Cube before.</figcaption>
+      </td>
+      <td>
+        <img src="images/part5_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Cube after significant splitting.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>Finally, to put our triangle operations to the test...</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part5_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Teapot before.</figcaption>
+      </td>
+      <td>
+        <img src="images/part5_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Teapot after many operations.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>Unfortunately (?) I did not have an epic debugging adventure, but it did certainly feel like an epic puzzling adventure.</p>
+
+<h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
+
+<p>The implementation of loop subdivision was far more difficult since it exposed a subtle, hidden bug in the split operation. The structure of the upsample function itself closely follows the recipe given by part 6:</p>
+<ol>
+  <li>Compute new positions for old vertices.</li>
+  <li>Compute new positions for new vertices.</li>
+  <li>Split every edge.</li>
+  <li>Flip every "new" edge. (There was a major bug here that I'll explain shortly.)</li>
+</ol>
+<p>That was the successful implementation, along with some bool storage and manipulation. There were 3 primary bugs in the original implementation that I had to scout out and fix:</p>
+<ul>
+  <li><b>Upsampling twice caused the program to become unresponsive.</b> Looking closer at the once upsampled mesh, I discovered inspecting certain vertices caused similar behavior. I finally managed to narrow this problem down to the split operation. Refactoring the entire split operation revealed a small typo in the halfedge assignments.</li>
+  <li><b>The final mesh was positioned correctly, but the edges were scrambled.</b> Turns out this was a misunderstanding in my concept of "new" edge. A split results in 4 edges from 1 edge, but only 2 of these edges are actually new edges. Updating accordingly fixed the problem.</li>
+  <li><b>Non-closed meshes, like that of the Volkswagon, became distorted at the edges.</b> Easiest to debug, since I found a similar post on Piazza. Vertices should include boundary edges in their newly computed positions, while the original code was not including them.</li>
+</ul>
+<p>Here is an example teapot after loop subdivision:</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">No loop subdivision.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">One loop subdivision.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>As hinted, it does seem as if the sharp edges of the original, especially on the handle, get smoothed out.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Original handle.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Subdivided handle.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>Presplitting one layer around the handle has a slightly different effect, though there is still smoothing.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image5.png" align="middle" width="400px"/>
+        <figcaption align="middle">Pre-split one layer.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image6.png" align="middle" width="400px"/>
+        <figcaption align="middle">Subdivision with pre-split.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>Inspecting 4 different splits on the cube...</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image7.png" align="middle" width="200px"/>
+        <figcaption align="middle">No loops.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image8.png" align="middle" width="200px"/>
+        <figcaption align="middle">One loop.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image9.png" align="middle" width="200px"/>
+        <figcaption align="middle">Two loops.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image10.png" align="middle" width="200px"/>
+        <figcaption align="middle">Three loops.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>The result looks asymmetric because, although the geometry is symmetrical, the topology is not. Let's pre-split every edge on every square face and try again.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/part6_image11.png" align="middle" width="400px"/>
+        <figcaption align="middle">Pre-split symmetric.</figcaption>
+      </td>
+      <td>
+        <img src="images/part6_image12.png" align="middle" width="400px"/>
+        <figcaption align="middle">Three loops.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>Now that the topology is symmetric, so is the subdivision. At least, it's symmetric in every way that the original cube was.</p>
+
+<h2 align="middle">Section III: Mesh Competition</h2>
+<h3 align="middle">Part 7: Design your own mesh!</h3>
+
+<p> Again, really wish I could have done this part! Ran out of time. </p>
+
+</body>
+</html>
