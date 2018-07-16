@@ -1,8 +1,19 @@
 {
-  "main.css": "static/css/main.355f1b39.css",
-  "main.css.map": "static/css/main.355f1b39.css.map",
-  "main.js": "static/js/main.4d4226d0.js",
-  "main.js.map": "static/js/main.4d4226d0.js.map",
+  "main.css": "static/css/main.3908fd5a.css",
+  "main.css.map": "static/css/main.3908fd5a.css.map",
+  "main.js": "static/js/main.b2e58752.js",
+  "main.js.map": "static/js/main.b2e58752.js.map",
+  "static\\media\\an.png": "static/media/an.78e620ec.png",
+  "static\\media\\cloth.png": "static/media/cloth.f1630774.png",
+  "static\\media\\concept.jpg": "static/media/concept.6ef72148.jpg",
+  "static\\media\\cow.png": "static/media/cow.13683f36.png",
+  "static\\media\\derg.png": "static/media/derg.a878fbd6.png",
+  "static\\media\\eye.png": "static/media/eye.f6aecf0b.png",
+  "static\\media\\fun.jpg": "static/media/fun.02b15881.jpg",
+  "static\\media\\henge.png": "static/media/henge.f65db73a.png",
+  "static\\media\\map.png": "static/media/map.4c7555a7.png",
+  "static\\media\\pong.png": "static/media/pong.6287f365.png",
   "static\\media\\prof.jpg": "static/media/prof.4c27c3cb.jpg",
-  "static\\media\\resume.pdf": "static/media/resume.7b5e9c5d.pdf"
+  "static\\media\\resume.pdf": "static/media/resume.7b5e9c5d.pdf",
+  "static\\media\\teapot.png": "static/media/teapot.7e207a9b.png"
 }
